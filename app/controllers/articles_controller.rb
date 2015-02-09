@@ -1,12 +1,30 @@
 class ArticlesController < ApplicationController
   include ArticlesHelper
+  before_action :get_user, only: [:show, :edit, :update, :destroy]
+  before_filter :authenticate_user, only: [:edit, :update, :destroy]
+  before_filter :require_login, except: [:index, :show]
+
+  def get_user
+    @article = Article.find(params[:id])
+  end
+
+  def authenticate_user
+    if @article.author_id != current_user.id
+      redirect_to articles_path
+    end
+  end
+
+  def require_login
+    unless logged_in?
+      redirect_to articles_path
+    end
+  end
 
   def index
     @articles = Article.all
   end
 
   def show
-    @article = Article.find(params[:id])
     @comment = Comment.new
     @comment.article_id = @article.id
   end
@@ -21,6 +39,7 @@ class ArticlesController < ApplicationController
 
   def create
     @article = Article.new(article_params)
+    @article.author_id = current_user.id
     @article.save
 
     flash.notice = "Article '#{@article.title}' Created!"

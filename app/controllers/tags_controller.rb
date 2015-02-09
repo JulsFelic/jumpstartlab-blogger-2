@@ -1,4 +1,12 @@
 class TagsController < ApplicationController
+  before_filter :require_login, only: [:destroy]
+
+  def require_login
+    unless logged_in?
+      redirect_to tags_path
+    end
+  end
+
   def index
     @tags = Tag.all
   end
